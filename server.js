@@ -43,10 +43,19 @@ app.get('/api', (req, res) => {
 
   if (action === 'list') return res.json(db.data.candidatures);
 
-  if (action === 'save') {
-    db.data.candidatures = JSON.parse(p.data || '[]');
-    db.write();
-    return res.json({ success: true });
+   if (action === 'addCandidature') {
+    try {
+      const cand = JSON.parse(decodeURIComponent(p.data || '{}'));
+      if (!cand.id) return res.json({ success: false, error: 'id manquant' });
+      const exists = db.data.candidatures.findIndex(c => String(c.id) === String(cand.id));
+      if (exists === -1) {
+        db.data.candidatures.push(cand);
+      } else {
+        db.data.candidatures[exists] = cand;
+      }
+      db.write();
+      return res.json({ success: true });
+    } catch(e) { return res.json({ success: false, error: e.message }); }
   }
 
   if (action === 'updateStatus') {
