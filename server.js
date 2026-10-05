@@ -3,9 +3,9 @@ const express = require('express');
 const cors    = require('cors');
 const db      = require('./db');
 
-const app    = express();
-const PORT   = process.env.PORT || 3000;
-const SECRET = process.env.GAS_SECRET || 'GI976KEY';
+const app     = express();
+const PORT    = process.env.PORT || 3000;
+const SECRET  = process.env.GAS_SECRET || 'GI976KEY';
 
 app.use(cors());
 app.use(express.json());
@@ -50,12 +50,24 @@ app.get('/api', (req, res) => {
   }
 
   if (action === 'updateStatus') {
-    const id  = parseInt(p.id);
+    const id   = parseInt(p.id);
     const cand = db.data.candidatures.find(c => c.id === id);
     if (!cand) return res.json({ success: false, error: 'id non trouve' });
     cand.status = p.status;
     if (p.validatedAt) cand.validatedAt = p.validatedAt;
     if (p.password)    cand.password    = p.password;
+    db.write();
+    return res.json({ success: true });
+  }
+
+  if (action === 'updateVentes') {
+    const id     = p.id;
+    const ventes = parseInt(p.ventes, 10);
+    if (!id) return res.json({ success: false, error: 'id manquant' });
+    if (isNaN(ventes)) return res.json({ success: false, error: 'ventes invalides' });
+    const idx = db.data.candidatures.findIndex(c => String(c.id) === String(id));
+    if (idx === -1) return res.json({ success: false, error: 'candidature non trouvee' });
+    db.data.candidatures[idx].ventes = ventes;
     db.write();
     return res.json({ success: true });
   }
